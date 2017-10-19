@@ -61,13 +61,6 @@ func deepMap(dst, src reflect.Value, visited map[uintptr]*visit, depth int, over
 				dstMap[fieldName] = src.Field(i).Interface()
 			}
 		}
-	case reflect.Ptr:
-		if dst.IsNil() {
-			v := reflect.New(dst.Type().Elem())
-			dst.Set(v)
-		}
-		dst = dst.Elem()
-		fallthrough
 	case reflect.Struct:
 		srcMap := src.Interface().(map[string]interface{})
 		for key := range srcMap {
@@ -92,7 +85,6 @@ func deepMap(dst, src reflect.Value, visited map[uintptr]*visit, depth int, over
 					srcKind = reflect.Ptr
 				}
 			}
-
 			if !srcElement.IsValid() {
 				continue
 			}
@@ -100,16 +92,14 @@ func deepMap(dst, src reflect.Value, visited map[uintptr]*visit, depth int, over
 				if err = deepMerge(dstElement, srcElement, visited, depth+1, overwrite); err != nil {
 					return
 				}
-			} else if dstKind == reflect.Interface && dstElement.Kind() == reflect.Interface {
-				if err = deepMerge(dstElement, srcElement, visited, depth+1, overwrite); err != nil {
-					return
-				}
-			} else if srcKind == reflect.Map {
-				if err = deepMap(dstElement, srcElement, visited, depth+1, overwrite); err != nil {
-					return
-				}
 			} else {
-				return fmt.Errorf("type mismatch on %s field: found %v, expected %v", fieldName, srcKind, dstKind)
+				if srcKind == reflect.Map {
+					if err = deepMap(dstElement, srcElement, visited, depth+1, overwrite); err != nil {
+						return
+					}
+				} else {
+					return fmt.Errorf("type mismatch on %s field: found %v, expected %v", fieldName, srcKind, dstKind)
+				}
 			}
 		}
 	}
