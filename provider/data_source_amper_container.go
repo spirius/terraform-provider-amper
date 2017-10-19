@@ -17,7 +17,7 @@ func dataSourceAmperContainer() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateName,
+				ValidateFunc: validateContainerName,
 			},
 			"attachment": {
 				Type:     schema.TypeSet,
