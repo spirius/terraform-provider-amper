@@ -12,22 +12,56 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/s3"
-
+	
 	tfaws "github.com/terraform-providers/terraform-provider-aws/aws"
 )
 
 func Provider() terraform.ResourceProvider {
-	// Get original terraform-aws provider scheme
-	tfawsProvider := tfaws.Provider().(*schema.Provider)
-
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
-			"profile":     tfawsProvider.Schema["profile"],
-			"region":      tfawsProvider.Schema["region"],
-			"access_key":  tfawsProvider.Schema["access_key"],
-			"secret_key":  tfawsProvider.Schema["secret_key"],
-			"assume_role": tfawsProvider.Schema["assume_role"],
+			"access_key": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
+
+			"secret_key": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
+
+			"profile": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "",
+			},
+
+			"region": {
+				Type:     schema.TypeString,
+				Required: true,
+				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
+					"AWS_REGION",
+					"AWS_DEFAULT_REGION",
+				}, nil),
+				InputDefault: "us-east-1",
+			},
+
+			"assume_role": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"role_arn": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 
 			"state_bucket": {
 				Type:        schema.TypeString,
@@ -64,10 +98,13 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		}
 	}
 
-	creds, err := tfaws.GetCredentials(config)
+	tfcreds, err := tfaws.GetCredentials(config)
+
 	if err != nil {
 		return nil, err
 	}
+	
+	creds := (*credentials.Credentials)(tfcreds)
 
 	if _, err = creds.Get(); err != nil {
 		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoCredentialProviders" {
