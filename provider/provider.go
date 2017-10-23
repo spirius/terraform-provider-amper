@@ -11,10 +11,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	
+
 	tfaws "github.com/terraform-providers/terraform-provider-aws/aws"
 )
 
@@ -103,7 +103,7 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	creds := (*credentials.Credentials)(tfcreds)
 
 	if _, err = creds.Get(); err != nil {

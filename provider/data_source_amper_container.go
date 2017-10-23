@@ -48,6 +48,13 @@ func dataSourceAmperContainer() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"service_role_policies": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 		},
 	}
 }
@@ -108,6 +115,41 @@ func dataSourceAmperContainerRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.Set("policies", policyMap)
+
+	serviceRoleMap := map[string]string{}
+
+	for account, serviceRoles := range p.ServiceRolePolicies {
+		i := 0
+
+		if serviceRoles != nil {
+			for name, serviceRole := range serviceRoles {
+				k := fmt.Sprintf("%s_%d", account, i)
+				i++
+
+				serviceRoleMap[fmt.Sprintf("%s_name", k)] = name
+
+				sp, err := json.MarshalIndent(serviceRole.Policy, "", "  ")
+
+				if err != nil {
+					return err
+				}
+
+				serviceRoleMap[fmt.Sprintf("%s_policy", k)] = string(sp)
+
+				sarp, err := json.MarshalIndent(serviceRole.AssumeRolePolicy, "", "  ")
+
+				if err != nil {
+					return err
+				}
+
+				serviceRoleMap[fmt.Sprintf("%s_assume_role_policy", k)] = string(sarp)
+			}
+		}
+
+		serviceRoleMap[fmt.Sprintf("%s_count", account)] = fmt.Sprintf("%d", len(serviceRoles))
+	}
+
+	d.Set("service_role_policies", serviceRoleMap)
 
 	d.SetId(d.Get("name").(string))
 

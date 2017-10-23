@@ -5,10 +5,17 @@ import (
 	"fmt"
 )
 
+type ServiceRolePolicy struct {
+	Policy           *IAMPolicyDoc
+	AssumeRolePolicy *IAMPolicyDoc
+}
+
 type Policy struct {
 	amper *Kernel
 
 	AccountPolicies map[string][]*IAMPolicyDoc
+
+	ServiceRolePolicies map[string]map[string]*ServiceRolePolicy
 }
 
 const DefaultManagedPoliciesPerRole = 10

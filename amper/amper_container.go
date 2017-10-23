@@ -94,10 +94,15 @@ func (c *Container) Policy() (_ *Policy, err error, missing []*Attachment) {
 	}
 
 	accountPolicies := make(map[string][]*IAMPolicyDoc)
+	serviceRolePolicies := make(map[string]map[string]*ServiceRolePolicy)
 	scopeMap := make(map[string]map[string]bool)
 
 	for _, a := range c.attachments {
-		pd, err := a.pt.render(c, a.account, a.vars)
+		if serviceRolePolicies[a.account.Name] == nil {
+			serviceRolePolicies[a.account.Name] = make(map[string]*ServiceRolePolicy)
+		}
+
+		pd, err := a.pt.renderTemplate(c, a.account, a.vars)
 
 		if err != nil {
 			return nil, err, nil
@@ -123,6 +128,24 @@ func (c *Container) Policy() (_ *Policy, err error, missing []*Attachment) {
 
 		for _, s := range a.pt.Scope {
 			scopeMap[a.account.Name][s] = true
+		}
+
+		if a.pt.ServiceRole != nil {
+			srp := &ServiceRolePolicy{}
+
+			srp.Policy, err = a.pt.renderServiceRole(c, a.account, a.vars)
+
+			if err != nil {
+				return nil, err, nil
+			}
+
+			srp.AssumeRolePolicy, err = a.pt.renderServiceAssumeRole(c, a.account, a.vars)
+
+			if err != nil {
+				return nil, err, nil
+			}
+
+			serviceRolePolicies[a.account.Name][a.pt.ServiceRole.Name] = srp
 		}
 	}
 
@@ -170,6 +193,7 @@ func (c *Container) Policy() (_ *Policy, err error, missing []*Attachment) {
 	}
 
 	p.AccountPolicies = accountPolicies
+	p.ServiceRolePolicies = serviceRolePolicies
 
 	if err = p.compress(); err != nil {
 		return

@@ -42,6 +42,27 @@ func dataSourceAmperPolicyTemplate() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
+			"service_role": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"template": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"assume_role_template": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -74,6 +95,18 @@ func dataSourceAmperPolicyTemplateRead(d *schema.ResourceData, meta interface{})
 	}
 
 	d.SetId(d.Get("key").(string))
+
+	serviceRole := d.Get("service_role").(*schema.Set).List()
+
+	if len(serviceRole) == 1 {
+		l := serviceRole[0].(map[string]interface{})
+
+		pt.ServiceRole = &amper.ServiceRoleTemplate{
+			Name:               l["name"].(string),
+			Template:           aws.String(l["template"].(string)),
+			AssumeRoleTemplate: aws.String(l["assume_role_template"].(string)),
+		}
+	}
 
 	return cc.AddPolicyTemplate(d.Get("container_id").(string), pt)
 }

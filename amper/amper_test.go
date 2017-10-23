@@ -33,11 +33,11 @@ func getS3(t *testing.T) *s3.S3 {
 
 func TestStaticPolicy(t *testing.T) {
 	var (
-		amper        *Kernel
-		root, c1     *Container
-		IAM, SQS *PolicyTemplate
-		err          error
-		acc1, acc2   *Account
+		amper      *Kernel
+		root, c1   *Container
+		IAM, SQS   *PolicyTemplate
+		err        error
+		acc1, acc2 *Account
 	)
 
 	amper = NewKernel(getS3(t), "vahe-test-bucket-sandbox")
@@ -129,10 +129,10 @@ func TestStaticPolicy(t *testing.T) {
 
 func TestS3PolicyTemplate(t *testing.T) {
 	var (
-		amper        *Kernel
-		acc          *Account
-		root, c1     *Container
-		err          error
+		amper    *Kernel
+		acc      *Account
+		root, c1 *Container
+		err      error
 		IAM, SQS *PolicyTemplate
 	)
 	amper = NewKernel(getS3(t), "vahe-test-bucket-sandbox")

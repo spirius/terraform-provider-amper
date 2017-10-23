@@ -14,6 +14,12 @@ import (
 	"github.com/Masterminds/sprig"
 )
 
+type ServiceRoleTemplate struct {
+	Name               string
+	Template           *string
+	AssumeRoleTemplate *string
+}
+
 type PolicyTemplate struct {
 	sync.Mutex
 
@@ -34,9 +40,36 @@ type PolicyTemplate struct {
 	// Scope defines AWS IAM services, covered by this template.
 	// Formate is same, as for Action field in IAM Policy Statement.
 	Scope []string
+
+	ServiceRole *ServiceRoleTemplate
 }
 
-func (pt *PolicyTemplate) render(c *Container, account *Account, vars map[string]string) (*IAMPolicyDoc, error) {
+func (pt *PolicyTemplate) render(name string, txt *string, vars map[string]interface{}) (*IAMPolicyDoc, error) {
+	tpl, err := template.
+		New(name).
+		Funcs(sprig.TxtFuncMap()).
+		Parse(*txt)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var policyBuf bytes.Buffer
+
+	if err = tpl.Execute(&policyBuf, vars); err != nil {
+		return nil, err
+	}
+
+	a := &IAMPolicyDoc{}
+
+	if err := json.Unmarshal(policyBuf.Bytes(), a); err != nil {
+		return nil, err
+	}
+
+	return a, nil
+}
+
+func (pt *PolicyTemplate) renderTemplate(c *Container, account *Account, vars map[string]string) (*IAMPolicyDoc, error) {
 	pt.Lock()
 	defer pt.Unlock()
 
@@ -65,28 +98,35 @@ func (pt *PolicyTemplate) render(c *Container, account *Account, vars map[string
 		"vars":      vars,
 	}
 
-	tpl, err := template.
-		New(fmt.Sprintf("container=%s,template=%s,account=%s", c.ID, pt.Key, account.Name)).
-		Funcs(sprig.TxtFuncMap()).
-		Parse(*pt.Template)
+	return pt.render(fmt.Sprintf("container=%s,template=%s,account=%s", c.ID, pt.Key, account.Name), pt.Template, templateVars)
+}
 
-	if err != nil {
-		return nil, err
+func (pt *PolicyTemplate) renderServiceRole(c *Container, account *Account, vars map[string]string) (*IAMPolicyDoc, error) {
+	if pt.ServiceRole == nil {
+		return nil, nil
 	}
 
-	var policyBuf bytes.Buffer
-
-	if err = tpl.Execute(&policyBuf, templateVars); err != nil {
-		return nil, err
+	templateVars := map[string]interface{}{
+		"container": c,
+		"account":   account,
+		"vars":      vars,
 	}
 
-	a := &IAMPolicyDoc{}
+	return pt.render(fmt.Sprintf("service_role:container=%s,template=%s,account=%s", c.ID, pt.Key, account.Name), pt.ServiceRole.Template, templateVars)
+}
 
-	if err := json.Unmarshal(policyBuf.Bytes(), a); err != nil {
-		return nil, err
+func (pt *PolicyTemplate) renderServiceAssumeRole(c *Container, account *Account, vars map[string]string) (*IAMPolicyDoc, error) {
+	if pt.ServiceRole == nil {
+		return nil, nil
 	}
 
-	return a, nil
+	templateVars := map[string]interface{}{
+		"container": c,
+		"account":   account,
+		"vars":      vars,
+	}
+
+	return pt.render(fmt.Sprintf("service_role:container=%s,template=%s,account=%s", c.ID, pt.Key, account.Name), pt.ServiceRole.AssumeRoleTemplate, templateVars)
 }
 
 func (pt *PolicyTemplate) fetchTemplate() (*string, error) {
