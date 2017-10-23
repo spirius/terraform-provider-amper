@@ -108,9 +108,12 @@ func init() {
 func validateContainerName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	ws, errors = validateName(v, k)
-	if reservedWordsRegexp.MatchString(value) {
+	
+	matches := reservedWordsRegexp.FindStringSubmatch(value)
+	
+	if len(matches) > 0 {
 		errors = append(errors, fmt.Errorf(
-			"reserved word used in %q: %q", k, value))
+			"reserved word '%s' used in %q: %q", matches[1], k, value))
 	}
 	return
 }
