@@ -18,24 +18,29 @@ func dataSourceAmperContainer() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateContainerName,
+				ForceNew:     true,
 			},
 			"attachment": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"account_name": {
 							Type:     schema.TypeString,
+							ForceNew: true,
 							Required: true,
 						},
 						"policy_template_id": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: validateName,
 						},
 						"vars": {
 							Type:     schema.TypeMap,
 							Optional: true,
+							ForceNew: true,
 							Elem:     schema.TypeString,
 						},
 					},

@@ -19,7 +19,7 @@ func dataSourceAmperPolicyTemplate() *schema.Resource {
 			},
 			"container_id": {
 				Type:         schema.TypeString,
-				Required:     true,
+				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validateName,
 			},
@@ -46,19 +46,23 @@ func dataSourceAmperPolicyTemplate() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 1,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"template": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 						"assume_role_template": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -108,5 +112,11 @@ func dataSourceAmperPolicyTemplateRead(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	return cc.AddPolicyTemplate(d.Get("container_id").(string), pt)
+	var containerId string
+
+	if attr, ok := d.GetOk("container_id"); ok {
+		containerId = attr.(string)
+	}
+
+	return cc.AddPolicyTemplate(containerId, pt)
 }

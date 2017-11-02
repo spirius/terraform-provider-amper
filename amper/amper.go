@@ -34,7 +34,7 @@ type Account struct {
 }
 
 func NewKernel(s3 *s3.S3, stateBucket string) *Kernel {
-	return &Kernel{
+	k := &Kernel{
 		containers:      make(map[string]*Container),
 		policyTemplates: make(map[string]*PolicyTemplate),
 		accounts:        make(map[string]*Account),
@@ -43,6 +43,10 @@ func NewKernel(s3 *s3.S3, stateBucket string) *Kernel {
 		StateBucket: stateBucket,
 		KeyFormat:   "output/%s/policies/%s.json.tpl",
 	}
+
+	k.NewContainer("") // null container
+
+	return k
 }
 
 func (a *Kernel) NewContainer(id string) (*Container, error) {
@@ -93,6 +97,10 @@ func (a *Kernel) AddPolicyTemplate(containerID string, pt *PolicyTemplate) error
 
 	if !ok {
 		return fmt.Errorf("container '%s' not found", containerID)
+	}
+
+	if containerID == "" && pt.Template == nil {
+		return fmt.Errorf("cannot add policy tmeplate, both contianerId and Template are not set")
 	}
 
 	return c.AddPolicyTemplate(pt)
