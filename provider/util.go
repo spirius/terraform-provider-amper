@@ -96,6 +96,7 @@ var reservedWords = []string{
 
 	// Custom reserved words
 	"ip",
+	"c",
 }
 
 var reservedWordsRegexp *regexp.Regexp
