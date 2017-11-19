@@ -33,7 +33,7 @@ type Account struct {
 	Limits AccountLimits
 }
 
-func NewKernel(s3 *s3.S3, stateBucket string) *Kernel {
+func NewKernel(s3 *s3.S3, stateBucket string, keyFormat string) *Kernel {
 	k := &Kernel{
 		containers:      make(map[string]*Container),
 		policyTemplates: make(map[string]*PolicyTemplate),
@@ -41,7 +41,7 @@ func NewKernel(s3 *s3.S3, stateBucket string) *Kernel {
 
 		S3:          s3,
 		StateBucket: stateBucket,
-		KeyFormat:   "output/%s/policies/%s.json.tpl",
+		KeyFormat:   keyFormat,
 	}
 
 	k.NewContainer("") // null container

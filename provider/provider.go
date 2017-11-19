@@ -68,6 +68,13 @@ func Provider() terraform.ResourceProvider {
 				Required:    true,
 				Description: "State file bucket",
 			},
+
+			"key_format": {
+				Type:        schema.TypeString,
+				Optional:    true,
+				Description: "External policies key format",
+				Default:     "output/%s/policies/%s.json.tpl",
+			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"amper_account":         dataSourceAmperAccount(),
@@ -125,5 +132,5 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		return nil, errwrap.Wrapf("Error creating AWS session: {{err}}", err)
 	}
 
-	return amper.NewKernel(s3.New(sess), d.Get("state_bucket").(string)), nil
+	return amper.NewKernel(s3.New(sess), d.Get("state_bucket").(string), d.Get("key_format").(string)), nil
 }
