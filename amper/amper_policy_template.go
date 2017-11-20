@@ -37,6 +37,9 @@ type PolicyTemplate struct {
 	// Vars contains list of required variables for rendering this template
 	Vars []string
 
+	// Consts contains list of constants.
+	Consts map[string]interface{}
+
 	// Scope defines AWS IAM services, covered by this template.
 	// Formate is same, as for Action field in IAM Policy Statement.
 	Scope []string
@@ -98,6 +101,10 @@ func (pt *PolicyTemplate) renderTemplate(c *Container, account *Account, vars ma
 		"vars":      vars,
 	}
 
+	for k, v := range pt.Consts {
+		templateVars[k] = v
+	}
+
 	return pt.render(fmt.Sprintf("container=%s,template=%s,account=%s", c.ID, pt.Key, account.Name), pt.Template, templateVars)
 }
 
@@ -112,6 +119,10 @@ func (pt *PolicyTemplate) renderServiceRole(c *Container, account *Account, vars
 		"vars":      vars,
 	}
 
+	for k, v := range pt.Consts {
+		templateVars[k] = v
+	}
+
 	return pt.render(fmt.Sprintf("service_role:container=%s,template=%s,account=%s", c.ID, pt.Key, account.Name), pt.ServiceRole.Template, templateVars)
 }
 
@@ -124,6 +135,10 @@ func (pt *PolicyTemplate) renderServiceAssumeRole(c *Container, account *Account
 		"container": c,
 		"account":   account,
 		"vars":      vars,
+	}
+
+	for k, v := range pt.Consts {
+		templateVars[k] = v
 	}
 
 	return pt.render(fmt.Sprintf("service_role:container=%s,template=%s,account=%s", c.ID, pt.Key, account.Name), pt.ServiceRole.AssumeRoleTemplate, templateVars)

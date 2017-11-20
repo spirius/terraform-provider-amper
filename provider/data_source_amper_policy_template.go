@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/spirius/terraform-provider-amper/amper"
@@ -67,6 +68,52 @@ func dataSourceAmperPolicyTemplate() *schema.Resource {
 					},
 				},
 			},
+			"const": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+							ValidateFunc: func(v interface{}, k string) ([]string, []error) {
+								switch v.(string) {
+								case "string", "list", "map":
+								default:
+									return nil, []error{fmt.Errorf("type can be string, list or map")}
+								}
+								return nil, nil
+							},
+						},
+						"string": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"list": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
+						},
+						"map": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							ForceNew: true,
+							Elem:     schema.TypeString,
+							Default:  nil,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -116,6 +163,16 @@ func dataSourceAmperPolicyTemplateRead(d *schema.ResourceData, meta interface{})
 
 	if attr, ok := d.GetOk("container_id"); ok {
 		containerId = attr.(string)
+	}
+
+	pt.Consts = make(map[string]interface{})
+
+	consts := d.Get("const").(*schema.Set).List()
+
+	for _, c := range consts {
+		raw := c.(map[string]interface{})
+
+		pt.Consts[raw["name"].(string)] = raw[raw["type"].(string)]
 	}
 
 	return cc.AddPolicyTemplate(containerId, pt)
