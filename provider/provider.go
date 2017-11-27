@@ -80,6 +80,7 @@ func Provider() terraform.ResourceProvider {
 			"amper_account":         dataSourceAmperAccount(),
 			"amper_container":       dataSourceAmperContainer(),
 			"amper_policy_template": dataSourceAmperPolicyTemplate(),
+			"amper_fc":              dataSourceAmperFc(),
 		},
 		ConfigureFunc: providerConfigure,
 	}
