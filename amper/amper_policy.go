@@ -42,6 +42,7 @@ func (policy *Policy) compressOne(account *Account, policies []*IAMPolicyDoc) ([
 				r.Statements = append(r.Statements, s)
 				s = nil
 				statements = statements[1:]
+				break
 			} else if len(r.Statements) == 0 {
 				// Rise error, if policy is not fitting in
 				// empty policy document.
