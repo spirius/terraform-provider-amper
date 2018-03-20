@@ -94,6 +94,7 @@ func (c *Container) Policy() (_ *Policy, err error, missing []*Attachment) {
 	}
 
 	accountPolicies := make(map[string][]*IAMPolicyDoc)
+	accountRolePolicies := make(map[string][]*IAMPolicyDoc)
 	serviceRolePolicies := make(map[string]map[string]*ServiceRolePolicy)
 	scopeMap := make(map[string]map[string]bool)
 
@@ -149,18 +150,23 @@ func (c *Container) Policy() (_ *Policy, err error, missing []*Attachment) {
 		}
 	}
 
+	allowAll := &IAMPolicyStatement{
+		Sid:       "AllowAll",
+		Effect:    "Allow",
+		Actions:   []string{"*"},
+		Resources: []string{"*"},
+	}
+
 	for account, po := range scopeMap {
-		var pd *IAMPolicyDoc
+		var denyUnknown *IAMPolicyStatement
 
 		if len(po) == 0 {
 			// Nothing will be allowed!
-			pd = &IAMPolicyDoc{
-				Statements: []*IAMPolicyStatement{{
-					Sid:       "DenyAll",
-					Effect:    "Deny",
-					Actions:   []string{"*"},
-					Resources: []string{"*"},
-				}},
+			denyUnknown = &IAMPolicyStatement{
+				Sid:       "DenyAll",
+				Effect:    "Deny",
+				Actions:   []string{"*"},
+				Resources: []string{"*"},
 			}
 		} else {
 			scopes := make([]string, 0, len(po))
@@ -171,28 +177,29 @@ func (c *Container) Policy() (_ *Policy, err error, missing []*Attachment) {
 
 			sort.Sort(sort.StringSlice(scopes))
 
-			pd = &IAMPolicyDoc{
-				Statements: []*IAMPolicyStatement{
-					{
-						Sid:        "DenyUnknownServices",
-						Effect:     "Deny",
-						NotActions: scopes,
-						Resources:  []string{"*"},
-					},
-					{
-						Sid:       "AllowAll",
-						Effect:    "Allow",
-						Actions:   []string{"*"},
-						Resources: []string{"*"},
-					},
-				},
+			denyUnknown = &IAMPolicyStatement{
+				Sid:        "DenyUnknownServices",
+				Effect:     "Deny",
+				NotActions: scopes,
+				Resources:  []string{"*"},
 			}
 		}
 
-		accountPolicies[account] = append(accountPolicies[account], pd)
+		accountPolicies[account] = append(accountPolicies[account], &IAMPolicyDoc{
+			Statements: []*IAMPolicyStatement{denyUnknown},
+		})
+
+		accountRolePolicies[account] = accountPolicies[account]
+
+		if len(po) > 0 {
+			accountPolicies[account] = append(accountPolicies[account], &IAMPolicyDoc{
+				Statements: []*IAMPolicyStatement{allowAll},
+			})
+		}
 	}
 
 	p.AccountPolicies = accountPolicies
+	p.AccountRolePolicies = accountRolePolicies
 	p.ServiceRolePolicies = serviceRolePolicies
 
 	if err = p.compress(); err != nil {

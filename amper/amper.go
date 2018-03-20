@@ -20,6 +20,12 @@ type Kernel struct {
 	KeyFormat string
 }
 
+type AmperConfig struct {
+	S3          *s3.S3
+	StateBucket string
+	KeyFormat   string
+}
+
 type AccountLimits struct {
 	ManagedPolicySize      int
 	ManagedPoliciesPerRole int
@@ -33,15 +39,15 @@ type Account struct {
 	Limits AccountLimits
 }
 
-func NewKernel(s3 *s3.S3, stateBucket string, keyFormat string) *Kernel {
+func NewKernel(config *AmperConfig) *Kernel {
 	k := &Kernel{
 		containers:      make(map[string]*Container),
 		policyTemplates: make(map[string]*PolicyTemplate),
 		accounts:        make(map[string]*Account),
 
-		S3:          s3,
-		StateBucket: stateBucket,
-		KeyFormat:   keyFormat,
+		S3:          config.S3,
+		StateBucket: config.StateBucket,
+		KeyFormat:   config.KeyFormat,
 	}
 
 	k.NewContainer("") // null container

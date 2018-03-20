@@ -40,7 +40,11 @@ func TestStaticPolicy(t *testing.T) {
 		acc1, acc2 *Account
 	)
 
-	amper = NewKernel(getS3(t), "vahe-test-bucket-sandbox")
+	amper = NewKernel(&AmperConfig{
+		S3:          getS3(t),
+		StateBucket: "vahe-test-bucket-sandbox",
+		KeyFormat:   "policies/%s/%s.json.tpl",
+	})
 
 	acc1 = &Account{
 		ID:        "023123123",
@@ -135,7 +139,11 @@ func TestS3PolicyTemplate(t *testing.T) {
 		err      error
 		IAM, SQS *PolicyTemplate
 	)
-	amper = NewKernel(getS3(t), "vahe-test-bucket-sandbox")
+	amper = NewKernel(&AmperConfig{
+		S3:          getS3(t),
+		StateBucket: "vahe-test-bucket-sandbox",
+		KeyFormat:   "policies/%s/%s.json.tpl",
+	})
 
 	acc = &Account{
 		ID:        "023123123",

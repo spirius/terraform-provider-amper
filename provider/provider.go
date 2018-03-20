@@ -41,7 +41,7 @@ func Provider() terraform.ResourceProvider {
 
 			"region": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				DefaultFunc: schema.MultiEnvDefaultFunc([]string{
 					"AWS_REGION",
 					"AWS_DEFAULT_REGION",
@@ -65,7 +65,7 @@ func Provider() terraform.ResourceProvider {
 
 			"state_bucket": {
 				Type:        schema.TypeString,
-				Required:    true,
+				Optional:    true,
 				Description: "State file bucket",
 			},
 
@@ -74,6 +74,20 @@ func Provider() terraform.ResourceProvider {
 				Optional:    true,
 				Description: "External policies key format",
 				Default:     "output/%s/policies/%s.json.tpl",
+			},
+
+			"disable_aws": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+				ConflictsWith: []string{
+					"access_key",
+					"secret_key",
+					"profile",
+					"region",
+					"state_bucket",
+					"key_format",
+				},
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
@@ -87,51 +101,58 @@ func Provider() terraform.ResourceProvider {
 }
 
 func providerConfigure(d *schema.ResourceData) (interface{}, error) {
-	config := &tfaws.Config{
-		AccessKey: d.Get("access_key").(string),
-		SecretKey: d.Get("secret_key").(string),
-		Profile:   d.Get("profile").(string),
-		Region:    d.Get("region").(string),
-	}
+	amperConfig := &amper.AmperConfig{}
 
-	assumeRoleList := d.Get("assume_role").(*schema.Set).List()
-	if len(assumeRoleList) == 1 {
-		assumeRole := assumeRoleList[0].(map[string]interface{})
-		config.AssumeRoleARN = assumeRole["role_arn"].(string)
-		config.AssumeRoleSessionName = assumeRole["session_name"].(string)
-		config.AssumeRoleExternalID = assumeRole["external_id"].(string)
-
-		if v := assumeRole["policy"].(string); v != "" {
-			config.AssumeRolePolicy = v
-		}
-	}
-
-	tfcreds, err := tfaws.GetCredentials(config)
-
-	if err != nil {
-		return nil, err
-	}
-
-	creds := (*credentials.Credentials)(tfcreds)
-
-	if _, err = creds.Get(); err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoCredentialProviders" {
-			return nil, fmt.Errorf("No valid credential sources found for AWS Provider")
+	if !d.Get("disable_aws").(bool) {
+		config := &tfaws.Config{
+			AccessKey: d.Get("access_key").(string),
+			SecretKey: d.Get("secret_key").(string),
+			Profile:   d.Get("profile").(string),
+			Region:    d.Get("region").(string),
 		}
 
-		return nil, fmt.Errorf("Error loading credentials for AWS Provider: %s", err)
+		assumeRoleList := d.Get("assume_role").(*schema.Set).List()
+		if len(assumeRoleList) == 1 {
+			assumeRole := assumeRoleList[0].(map[string]interface{})
+			config.AssumeRoleARN = assumeRole["role_arn"].(string)
+			config.AssumeRoleSessionName = assumeRole["session_name"].(string)
+			config.AssumeRoleExternalID = assumeRole["external_id"].(string)
+
+			if v := assumeRole["policy"].(string); v != "" {
+				config.AssumeRolePolicy = v
+			}
+		}
+
+		tfcreds, err := tfaws.GetCredentials(config)
+
+		if err != nil {
+			return nil, err
+		}
+
+		creds := (*credentials.Credentials)(tfcreds)
+
+		if _, err = creds.Get(); err != nil {
+			if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NoCredentialProviders" {
+				return nil, fmt.Errorf("No valid credential sources found for AWS Provider")
+			}
+
+			return nil, fmt.Errorf("Error loading credentials for AWS Provider: %s", err)
+		}
+
+		awsConfig := &aws.Config{
+			Credentials: creds,
+			Region:      aws.String(config.Region),
+		}
+
+		sess, err := session.NewSession(awsConfig)
+
+		if err != nil {
+			return nil, errwrap.Wrapf("Error creating AWS session: {{err}}", err)
+		}
+		amperConfig.S3 = s3.New(sess)
+		amperConfig.StateBucket = d.Get("state_bucket").(string)
+		amperConfig.KeyFormat = d.Get("key_format").(string)
 	}
 
-	awsConfig := &aws.Config{
-		Credentials: creds,
-		Region:      aws.String(config.Region),
-	}
-
-	sess, err := session.NewSession(awsConfig)
-
-	if err != nil {
-		return nil, errwrap.Wrapf("Error creating AWS session: {{err}}", err)
-	}
-
-	return amper.NewKernel(s3.New(sess), d.Get("state_bucket").(string), d.Get("key_format").(string)), nil
+	return amper.NewKernel(amperConfig), nil
 }

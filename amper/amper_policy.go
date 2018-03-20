@@ -13,7 +13,8 @@ type ServiceRolePolicy struct {
 type Policy struct {
 	amper *Kernel
 
-	AccountPolicies map[string][]*IAMPolicyDoc
+	AccountPolicies     map[string][]*IAMPolicyDoc
+	AccountRolePolicies map[string][]*IAMPolicyDoc
 
 	ServiceRolePolicies map[string]map[string]*ServiceRolePolicy
 }
@@ -79,6 +80,21 @@ func (p *Policy) compress() error {
 		}
 
 		p.AccountPolicies[account] = policies
+	}
+
+	for account, policies := range p.AccountRolePolicies {
+		policies, err := p.compressOne(p.amper.accounts[account], policies)
+
+		if err != nil {
+			return err
+		}
+
+		if policies == nil {
+			// Attach empty policy
+			policies = []*IAMPolicyDoc{{}}
+		}
+
+		p.AccountRolePolicies[account] = policies
 	}
 
 	return nil

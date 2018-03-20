@@ -145,6 +145,10 @@ func (pt *PolicyTemplate) renderServiceAssumeRole(c *Container, account *Account
 }
 
 func (pt *PolicyTemplate) fetchTemplate() (*string, error) {
+	if pt.amper.S3 == nil || pt.amper.StateBucket == "" || pt.amper.KeyFormat == "" {
+		return nil, fmt.Errorf("S3 configuration not found")
+	}
+
 	var key = fmt.Sprintf(pt.amper.KeyFormat, pt.container.ID, pt.Key)
 
 	objInfo, err := pt.amper.S3.HeadObject(&s3.HeadObjectInput{
