@@ -53,6 +53,13 @@ func dataSourceAmperContainer() *schema.Resource {
 					Type: schema.TypeString,
 				},
 			},
+			"role_policies": {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"service_role_policies": {
 				Type:     schema.TypeMap,
 				Computed: true,
@@ -115,11 +122,28 @@ func dataSourceAmperContainerRead(d *schema.ResourceData, meta interface{}) erro
 		policyMap[fmt.Sprintf("%s_count", account)] = fmt.Sprintf("%d", len(policies))
 	}
 
+	rolePolicyMap := map[string]string{}
+
+	for account, policies := range p.AccountRolePolicies {
+		for k, policy := range policies {
+			s, err := json.MarshalIndent(policy, "", "  ")
+
+			if err != nil {
+				return err
+			}
+
+			rolePolicyMap[fmt.Sprintf("%s_%d", account, k)] = string(s)
+		}
+
+		rolePolicyMap[fmt.Sprintf("%s_count", account)] = fmt.Sprintf("%d", len(policies))
+	}
+
 	for _, a := range missing {
 		log.Printf("[WARN] Policy template not found for '%s' in attachment '%s'", a, d.Id())
 	}
 
 	d.Set("policies", policyMap)
+	d.Set("role_policies", rolePolicyMap)
 
 	serviceRoleMap := map[string]string{}
 
