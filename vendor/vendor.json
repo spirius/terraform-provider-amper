@@ -57,6 +57,12 @@
 			"revisionTime": "2017-08-03T03:49:30Z"
 		},
 		{
+			"checksumSHA1": "Pc2ORQp+VY3Un/dkh4QwLC7R6lE=",
+			"path": "github.com/BurntSushi/toml",
+			"revision": "a368813c5e648fee92e5f6c30e3944ff9d5e8895",
+			"revisionTime": "2017-06-26T11:06:00Z"
+		},
+		{
 			"checksumSHA1": "yF83DgvBrKbBrTo5i1VVtWM+kCQ=",
 			"path": "github.com/ChrisTrenkamp/goxpath",
 			"revision": "c385f95c6022e7756e91beac5f5510872f7dcb7d",
@@ -2137,6 +2143,12 @@
 			"path": "github.com/satori/uuid",
 			"revision": "5bf94b69c6b68ee1b541973bb8e1144db23a194b",
 			"revisionTime": "2017-03-21T23:07:31Z"
+		},
+		{
+			"checksumSHA1": "kauHyhGCsQV8zeihXLsPAuQToS4=",
+			"path": "github.com/spirius/fc",
+			"revision": "fe8ea959a7e638178787284b353c90c4f1a9588b",
+			"revisionTime": "2018-09-16T15:28:14Z"
 		},
 		{
 			"checksumSHA1": "VAJg4XvIVlU3BxgCDqbnREIrvKU=",
