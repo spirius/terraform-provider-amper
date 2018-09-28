@@ -2157,12 +2157,12 @@
 			"revisionTime": "2017-03-21T23:07:31Z"
 		},
 		{
-			"checksumSHA1": "XR8459GpbdFlpZy417WCGNwXuws=",
+			"checksumSHA1": "0Pkh/7AF1u79zqxteaN5voo3fck=",
 			"path": "github.com/spirius/fc",
-			"revision": "76971ca636192554276df330c2d5a47b23a97cef",
-			"revisionTime": "2018-09-28T14:01:02Z",
-			"version": "v1.0.14",
-			"versionExact": "v1.0.14"
+			"revision": "66f28ae901f0b502b44390d6e15478cf92750058",
+			"revisionTime": "2018-09-28T15:31:06Z",
+			"version": "v1.0.15",
+			"versionExact": "v1.0.15"
 		},
 		{
 			"checksumSHA1": "VAJg4XvIVlU3BxgCDqbnREIrvKU=",
