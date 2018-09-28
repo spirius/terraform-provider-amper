@@ -153,10 +153,10 @@
 			"revisionTime": "2017-05-02T10:47:25Z"
 		},
 		{
-			"checksumSHA1": "fdKCyDbBjbSYmsVNhGT7XBD3Wkg=",
+			"checksumSHA1": "cULNu89EKumcxuNj+bhpowzZwcA=",
 			"path": "github.com/Masterminds/sprig",
-			"revision": "e039e20e500c2c025d9145be375e27cf42a94174",
-			"revisionTime": "2017-05-26T13:44:39Z"
+			"revision": "15f9564e7e9cf0da02a48e0d25f12a7b83559aa6",
+			"revisionTime": "2018-09-14T00:13:42Z"
 		},
 		{
 			"checksumSHA1": "IrtvVIFBTQmk0+vM7g2xtka5SFg=",
@@ -841,6 +841,12 @@
 			"path": "github.com/golang/snappy",
 			"revision": "553a641470496b2327abcac10b36396bd98e45c9",
 			"revisionTime": "2017-02-15T23:32:05Z"
+		},
+		{
+			"checksumSHA1": "yNyE9MrpDJQAxOxSipSIBgBhuNQ=",
+			"path": "github.com/google/uuid",
+			"revision": "9b3b1e0f5f99ae461456d768e7d301a7acdaa2d8",
+			"revisionTime": "2018-09-17T14:00:05Z"
 		},
 		{
 			"checksumSHA1": "Zcapl92yLsRGDnDfmD5BMZrU0i8=",
